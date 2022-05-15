@@ -1,10 +1,13 @@
 #include "Bible.h" 
 
-bool isBookOpen = false;  //indicates if a book is open
-bool isChapterOpen = false;  //indicates if a chapter is open
-string bookName = "";    //the book that been opened
-int chapterNumber = -1;	//the chapter that has been opened
-int nChapters;     //number of chapters in the opened book
+bool isBookOpen = false;  			//indicates if a book is open
+bool isChapterOpen = false;  		//indicates if a chapter is open
+bool isSingleVerseMode = false;  	// only one verse is displayed in single verse mode
+
+string bookName = "";    	//the book that been opened
+int chapterNumber = -1;		//the chapter that has been opened
+int nChapters;     			//number of chapters in the opened book
+int nVerse;         			// the verse in a chapter to open
 map<string, vector<vector<string>>> myBible;
 vector<vector<string>> myChapters;  //indicates the content of the open book
 
@@ -25,6 +28,11 @@ void help(vector<string> arguments)
 	cout<<"While a book and chapter has been opened previously, you can use the following commands:"<<endl;
 	cout<<"<-next | -n>        Open the next chapter if any."<<endl;
 	cout<<"<-prev | -p>        Open the previous chapter if any.\n"<<endl;
+	cout<<"Other Arguments"<<endl;
+	cout<<"<-verse | -v [verse number]      Optional parameter to specify the verse to open"<<endl;
+	cout<<"                                 When used, only the specified verse is open"<<endl;
+	cout<<"Usage:"<<endl;
+	cout<<"-open genesis -c 2 -v 5          Open genesis chapter 2 verse 5"<<endl;
 }
 
 void open(vector<string> arguments, vector<string> bookNames)
@@ -42,7 +50,7 @@ void open(vector<string> arguments, vector<string> bookNames)
 		bookname = arguments[1];	
 	}
 	
-	//move to the next argument is any
+	//move to the next argument if any
 	if(arguments.size() > 2)
 	{
 		//it's expected the next argument will be -chapter
@@ -64,6 +72,27 @@ void open(vector<string> arguments, vector<string> bookNames)
 			}else
 			{
 				cout<<"Invalid chapter ' '"<<endl;
+			}
+
+			// next get the particular verse if specified
+			if(arguments.size() > 4)
+			{
+				if(arguments[4] == "-verse" || arguments[4] == "verse" || arguments[4] == "-v")
+				{
+					// check the verse argument
+					if(arguments.size() > 5)
+					{
+						// get the verse number
+						nVerse = parseInt(arguments[5]);
+						if(nVerse > 0){
+							isSingleVerseMode = true;
+						}else{
+							cout<<"Invalid verse '"<<nVerse<<"'"<<endl;
+						}
+					}
+				}else{
+					cout<<"Invalid argument "<<arguments[4]<<endl;
+				}				
 			}
 		}else
 		{
@@ -121,9 +150,30 @@ void chapter(vector<string> arguments)
 					printBibleVerses(myChapters[chapterNumber - 1], bookName, chapterNumber);
 					isChapterOpen = true;
 				}else
-				{					
+				{
 					chapterNumber = -1;
 					cout<<"Invalid chapter, Chapter should be in range 1 - "<<nChapters<<endl;
+				}
+
+				// next get the particular verse if specified
+				if(arguments.size() > 2)
+				{
+					if(arguments[2] == "-verse" || arguments[2] == "verse" || arguments[2] == "-v")
+					{
+						// check the verse argument
+						if(arguments.size() > 3)
+						{
+							// get the verse number
+							nVerse = parseInt(arguments[3]);
+							if(nVerse > 0){
+								isSingleVerseMode = true;
+							}else{
+								cout<<"Invalid verse '"<<nVerse<<"'"<<endl;
+							}
+						}
+					}else{
+						cout<<"Invalid argument "<<arguments[4]<<endl;
+					}				
 				}				
 			}else
 			{
@@ -219,10 +269,22 @@ void printBibleVerses(vector<string> chapterVerses, string bookName, int chapter
 	cout<<bookName<<" Chapter "<<chapterNumber<<endl;
 	cout<<"================================"<<endl;
 
-	for(int a = 0; a < chapterVerses.size(); a++)
-	{
-		cout<<a + 1<<".  "<<chapterVerses[a]<<endl;
+	if(isSingleVerseMode)
+	{	
+		if(chapterVerses.size() >= nVerse)
+		{
+			cout<<nVerse<<".  "<<chapterVerses[nVerse - 1]<<endl;
+		}else
+		{
+			cout<<"Invalid verse, verse must be in ange (1 - "<<chapterVerses.size()<<")"<<endl;
+		}		
+	}else{
+		for(int a = 0; a < chapterVerses.size(); a++)
+		{
+			cout<<a + 1<<".  "<<chapterVerses[a]<<endl;
+		}
 	}
+	isSingleVerseMode = false;
 }
 
 //Compares a string with other strings in a vector<string> container,
